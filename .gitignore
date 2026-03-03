@@ -1,0 +1,6 @@
+Extension/node_modules/
+Extension/package-lock.json
+Extension/package.json
+
+Server/node_modules/
+Server/package-lock.json
