@@ -1,5 +1,6 @@
-import { setupDb, validateLogin, signIn, getPasswordsByUserName, insertNewPasswordEntry, dbErrors, PasswordEntry } from "./dbManager";
+import { setupDb, validateLogin, signUp, getPasswordsByUserName, insertNewPasswordEntry, dbErrors, PasswordEntry } from "./dbManager";
 import express, { type Express } from "express";
+import cors from "cors";
 import { Database } from "sqlite";
 import crypto, { sign } from 'crypto';
 
@@ -26,6 +27,9 @@ const app: Express = express();
 const port: number = 8080;
 let db: Database;
 
+app.use(cors());
+app.use(express.json());
+
 app.post("/login", async (req, res) => {
   const { userName, password } = req.body;
   const loginIsValide = await validateLogin(db, userName, password);
@@ -48,11 +52,11 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.post("/sign_in", async(req, res) => {
+app.post("/sign_up", async(req, res) => {
   const { userName, password } = req.body;
-  const signInRes = await signIn(db, userName, password);
+  const signUpRes = await signUp(db, userName, password);
 
-  if (signInRes.success) {
+  if (signUpRes.success) {
     const sessionToken = generateSessionKey(password);
     const newUser: userSession = new userSession(userName, sessionToken);
     userSession.logedInUsers.push(newUser);
@@ -65,13 +69,13 @@ app.post("/sign_in", async(req, res) => {
 
   } else {
 
-    if(signInRes.error_type === dbErrors.DUPLICATED_USERNAME) {
+    if(signUpRes.error_type === dbErrors.DUPLICATED_USERNAME) {
       return res.status(401).json({ 
         success: false, 
-        message: signInRes.error_msg
+        message: signUpRes.error_msg
       });
     } else {
-      console.error(signInRes.error_msg);
+      console.error(signUpRes.error_msg);
       return res.status(401).json({ 
         success: false, 
         message: "Something Went Wrong"

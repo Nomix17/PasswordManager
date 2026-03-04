@@ -1,11 +1,11 @@
-import {type JSX } from "react";
+import { type JSX } from "react";
 import { CredentialsForm } from "./CredentialsForm";
 import "./styles/FormContainer.css"
 
-export function Login(): JSX.Element {
-  const loginRequest = async (userName: string, password: string) => {
+export function SignUp(): JSX.Element {
+  const signUpRequest = async (userName: string, password: string) => {
     try {
-      const res = await fetch("http://localhost:8080/login", {
+      const res = await fetch("http://localhost:8080/sign_up", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -29,15 +29,11 @@ export function Login(): JSX.Element {
     }
   }
 
-  const signUpClicked = () => {
-    window.location.href = "";
-  }
-
   return (
     <div className="form-container">
-      <h1>Login</h1>
-      <CredentialsForm onBtnClicked={loginRequest}/>
-      <a className="signUp-link" href=" " onClick={signUpClicked}>Create Account</a>
+      <h1>Sign Up</h1>
+      <CredentialsForm onBtnClicked={signUpRequest}/>
     </div>
   );
 }
+

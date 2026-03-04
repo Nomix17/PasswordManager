@@ -51,7 +51,7 @@ body {
   margin-bottom: 32px;
 }
 
-.signIn-link {
+.signUp-link {
   display: inline-block;
   margin-top: 20px;
   font-family: 'DM Sans', sans-serif;
@@ -64,7 +64,7 @@ body {
   transition: color 0.2s ease;
 }
 
-.signIn-link:hover {
+.signUp-link:hover {
   color: var(--text-primary);
 }
 

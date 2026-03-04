@@ -69,11 +69,12 @@ export async function validateLogin(db: Database, userName: string, password: st
   return res;
 }
 
-export async function signIn( db: Database, userName:string, password:string ): Promise<{ success: boolean, error_type:dbErrors | null, error_msg:string} > {
+export async function signUp( db: Database, userName:string, password:string ): Promise<{ success: boolean, error_type:dbErrors | null, error_msg:string} > {
   try {
+    const hashedPassword = await bcrypt.hash(password, 12);
     const row = await db.get(
-      "INSERT INTO users (userName, password) VALUES (?, ?, ?)",
-      [userName, password]
+      "INSERT INTO users (userName, password) VALUES (?, ?)",
+      [userName, hashedPassword]
     );
   } catch (err: any) {
     if (err.code === "SQLITE_CONSTRAINT") {
@@ -83,7 +84,7 @@ export async function signIn( db: Database, userName:string, password:string ): 
     }
   }
 
-  return { success: false, error_type:null, error_msg:"" }
+  return { success: true, error_type:null, error_msg:"" }
 }
 
 export async function insertNewPasswordEntry (
