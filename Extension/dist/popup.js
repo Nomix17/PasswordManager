@@ -1,2 +1,0 @@
-"use strict";
-window.location.href = "login.html";

@@ -1,6 +1,20 @@
+.DS_Store
+*.log
+
 Extension/node_modules/
-Extension/package-lock.json
-Extension/dist/package-lock.json
+Extension/dist/
+Extension/dist-ssr/
+Extension/*.local
+Extension/.vscode/*
+Extension/!.vscode/extensions.json
+Extension/.idea/
+Extension/*.suo
+Extension/*.ntvs*
+Extension/*.njsproj
+Extension/*.sln
+Extension/*.sw?
 
 Server/node_modules/
-Server/package-lock.json
+Server/build/
+Server/*.local
+Server/.idea/
