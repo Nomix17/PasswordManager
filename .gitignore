@@ -18,3 +18,4 @@ Server/node_modules/
 Server/build/
 Server/*.local
 Server/.idea/
+Server/dist
