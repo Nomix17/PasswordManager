@@ -1,10 +1,10 @@
 import { type JSX } from "react";
 import { CredentialsForm } from "./CredentialsForm";
 
-export function SignUp(): JSX.Element {
+export function Login(): JSX.Element {
 
   const signUpRequest = async (userName: string, password: string) => {
-    const res = await fetch("http://localhost:8080/sign_up", {
+    const res = await fetch("http://localhost:8080/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userName, password }),
@@ -20,7 +20,7 @@ export function SignUp(): JSX.Element {
   };
 
   return (
-    <CredentialsForm formTitle={"Sign Up"} requestFunction={signUpRequest} />
+    <CredentialsForm formTitle={"Login"} requestFunction={signUpRequest} />
   );
 }
 
