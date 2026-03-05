@@ -48,9 +48,9 @@ export function CredentialsForm({formTitle, requestFunction}: {formTitle:string,
         sendCredential(userNameValue, passwordValue);
 
       } else if (userNameValue.trim() !== "") {
-        setResponseMessage("Please enter your username")
-      } else if(passwordValue.trim() !== "") {
         setResponseMessage("Please enter your password")
+      } else if(passwordValue.trim() !== "") {
+        setResponseMessage("Please enter your username")
       } else {
         setResponseMessage("Please enter you username and password")
       }
