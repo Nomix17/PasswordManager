@@ -4,7 +4,7 @@ import { PasswordEntriesProvider } from "./contexts/PasswordsEntriesContext";
 import { Login } from './Login'
 import { SignUp } from './SignUp';
 import { Home } from './Home';
-
+import "./styles/basicStyles.css";
 import "./styles/App.css"
 
 function App() {
