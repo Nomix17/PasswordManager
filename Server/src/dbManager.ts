@@ -10,17 +10,20 @@ export enum dbErrors {
 };
 
 export class PasswordEntry {
+  id: string;
   type: string;
   userName: string;
   password: string;
-  constructor(type:string, userName:string, password:string) {
+  constructor(id:string, type:string, userName:string, password:string) {
+    this.id = id;
     this.type = type;
     this.userName = userName;
     this.password = password;
   }
 
-  toJson(): { type: string; userName: string; password: string } {
+  toJson(): {id:string, type: string, userName: string, password: string } {
     return {
+      id: this.id,
       type: this.type,
       userName: this.userName,
       password: this.password
@@ -44,8 +47,8 @@ export async function setupDb(dbPath:string): Promise<Database> {
 
   db.run(`
     CREATE TABLE IF NOT EXISTS passwords (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
       userId INTEGER,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       userName INTEGER,
       type TEXT,
       password TEXT,
@@ -107,21 +110,38 @@ export async function insertNewPasswordEntry (
   );
 }
 
-export async function getPasswordsByUserName(db: Database, userName: string): Promise<PasswordEntry[] | null>{
+export async function insertPasswordsEntries (
+  db: Database,
+  sessionUserName: string,
+  newPasswords: PasswordEntry[] 
+): Promise<void> { 
+
+  const row =  await db.get(
+    "SELECT id FROM users WHERE userName = ?",
+    [sessionUserName]
+  );
+
+  if (!row)
+    throw new Error("User not found");
+
+  for(const passwordEntry of newPasswords) {
+    await db.run(
+      "REPLACE INTO passwords (userId, id, userName, type, password) VALUES (?, ?, ?, ?, ?)",
+      [row.id,passwordEntry.id, passwordEntry.userName, passwordEntry.type, passwordEntry.password],
+    );
+  }
+}
+
+export async function getPasswordsByUserName(db: Database, userName: string): Promise<PasswordEntry[]> {
   const rows = await db.all(`
       SELECT p.*
       FROM users u
-      LEFT JOIN passwords p ON p.userId = u.id
+      INNER JOIN passwords p ON p.userId = u.id
       WHERE u.userName = ?
-  `,[userName]
-  )
-
-  if(!rows) return null;
-
+  `, [userName]);
+console.log(rows);
   return rows.map(
-    row => (
-      new PasswordEntry(row.type, row.userName, row.password)
-    )
+    row => new PasswordEntry(row.id, row.type, row.userName, row.password)
   );
 }
 

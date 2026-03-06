@@ -1,4 +1,4 @@
-import { setupDb, validateLogin, signUp, getPasswordsByUserName, insertNewPasswordEntry, dbErrors, PasswordEntry } from "./dbManager";
+import { setupDb, validateLogin, signUp, getPasswordsByUserName, insertNewPasswordEntry, dbErrors, PasswordEntry, insertPasswordsEntries } from "./dbManager";
 import express, { type Express } from "express";
 import cors from "cors";
 import { Database } from "sqlite";
@@ -21,6 +21,13 @@ class userSession {
     }
     return null;
   }
+}
+
+function validateCredentials(sessionUserName: string, sessionToken: string): boolean {
+  for(const user of userSession.logedInUsers) {
+    if(user.sessionUserName === sessionUserName && user.sessionToken === sessionToken) return true;
+  }
+  return false;
 }
 
 const app: Express = express();
@@ -86,10 +93,10 @@ app.post("/sign_up", async(req, res) => {
 
 app.post("/get_passwords", async (req, res) => {
   const { sessionUserName, sessionToken } = req.body;
-  if(sessionUserName == null || sessionToken == null) {
+  if(typeof sessionUserName !== "string" || typeof sessionToken !== "string") {
     return res.status(401).json({
       success: false,
-      message: "Invalide session token, or user name"
+      message: "Invalid parameters"
     });
   }
   const user: userSession | null = userSession.findUserByUserName(sessionUserName);
@@ -110,15 +117,43 @@ app.post("/get_passwords", async (req, res) => {
     });
   }
 
+  const passToSend: any[] = passwordEntries.map(element => (element.toJson()));
   return res.status(200).json({
     success:true,
-    data:passwordEntries.map(element=>(element.toJson()))
+    data:passToSend
   });
 });
 
-app.post("/add_password", (req, res) => {
-  const { sessionUserName, sessionToken, newPassword } = req.body;
-  const { type, userName, password } = newPassword;
+function formatResponse(newPasswords: any) {
+  return newPasswords.map(
+    (row: any) => (
+      new PasswordEntry(row?.id, row?.type, row?.userName, row?.password)
+    )
+  );
+}
+
+app.post("/add_passwords", (req, res) => {
+  const { sessionUserName, sessionToken, newPasswords } = req.body;
+
+  try {
+    if(validateCredentials(sessionUserName, sessionToken)) {
+      insertPasswordsEntries(db, sessionUserName, formatResponse(newPasswords));
+      return res.status(200).json({
+        success: true,
+        message: "Passwords where added Successfully",
+      });
+
+    } else {
+      throw new Error("Invalid credentials");
+    }
+
+  } catch(err: any) {
+    console.error(err.message);
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
 });
 
 app.listen(port, async() => {
