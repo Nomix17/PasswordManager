@@ -46,7 +46,7 @@ export function NewPasswordManagerOverlay({ overlayVisibility, setOverlayVisibil
   return (
     <div className={overlayVisibility ? "newPassOverlay-div" : "newPassOverlay-div hidden"}>
       <div className="newPass-div">
-        <button className="close-btn" id="closeBtn" aria-label="Close" onClick={closeOverlay}>
+        <button className="close-btn" type="submit" aria-label="Close" onClick={closeOverlay}>
           ×
         </button>
         <h1>New Password</h1>
@@ -69,10 +69,10 @@ export function NewPasswordManagerOverlay({ overlayVisibility, setOverlayVisibil
         />
 
         <div className="button-group">
-          <button id="cancelBtn" className="secondary-btn" onClick={closeOverlay}>
+          <button type="submit" className="secondary-btn" onClick={closeOverlay}>
             Cancel
           </button>
-          <button id="addBtn" className="primary-btn" onClick={addNewPasswordEntry}>
+          <button type="submit" className="primary-btn" onClick={addNewPasswordEntry}>
             Add
           </button>
         </div>
