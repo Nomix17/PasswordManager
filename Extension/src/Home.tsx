@@ -97,6 +97,9 @@ const [notify, setNotify] = useState<{ message: string; success: boolean } | nul
     }
   }
 
+  const newPasswordEntry = () => {
+  }
+
   return (
     <>
       {notify && (
@@ -108,7 +111,7 @@ const [notify, setNotify] = useState<{ message: string; success: boolean } | nul
       <div className="home-container">
         <div className="topBar-div">
           <input placeholder="Search"/>
-          <button type="submit">New</button>
+          <button type="submit" onClick={newPasswordEntry}>New</button>
         </div>
         <div className="passEntries-container">
           {

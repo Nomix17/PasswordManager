@@ -2,6 +2,7 @@ import { useState, useRef, type JSX } from "react";
 import "./styles/CredentialsForm.css"
 import { useNavigate } from 'react-router-dom';
 import { useUserAuthData } from "./contexts/UserDataContext";
+import { LoadingGif } from "./LoadingGif";
 
 export function CredentialsForm({formTitle, requestFunction}: {formTitle:string, requestFunction:Function}): JSX.Element {
   const context = useUserAuthData();
@@ -63,8 +64,13 @@ export function CredentialsForm({formTitle, requestFunction}: {formTitle:string,
       {isLoading && (
         <div className="loading-overlay">
           <div className="loading-content">
-            <img src="/loading.gif" alt="Loading..." className="loading-gif" />
-            <p className="loading-text">Creating your account...</p>
+            <p className="dummy-text"></p>
+            <LoadingGif/>
+            <p className="loading-text">
+              {formTitle.toLowerCase() === "login" 
+                ? "Verifying your credentials..." 
+                : "Setting up your account..."}
+            </p>
           </div>
         </div>
       )}

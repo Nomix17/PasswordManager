@@ -1,0 +1,29 @@
+.loader {
+  width: 72px;
+  height: 72px;
+}
+.loader svg {
+  animation: rotate 1.2s linear infinite;
+  transform-origin: center;
+}
+.track {
+  fill: none;
+  stroke: #888888;
+  stroke-width: 6;
+}
+.arc {
+  fill: none;
+  stroke: url(#grad);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 80 160;
+  animation: dash 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes rotate {
+  to { transform: rotate(360deg); }
+}
+@keyframes dash {
+  0%   { stroke-dasharray: 20 220; stroke-dashoffset: 0; }
+  50%  { stroke-dasharray: 160 80; stroke-dashoffset: -60; }
+  100% { stroke-dasharray: 20 220; stroke-dashoffset: -220; }
+}
