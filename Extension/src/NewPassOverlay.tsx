@@ -35,6 +35,15 @@ export function NewPasswordManagerOverlay({ overlayVisibility, setOverlayVisibil
     if (Object.values(newErrors).some(Boolean)) {
       setTimeout(() => setErrors({ type: false, userName: false, password: false }), 600);
       return;
+
+    } else if(
+        passTypeRef.current &&
+        passUserNameRef.current &&
+        passPasswordRef.current
+    ) {
+      passTypeRef.current.value = "";
+      passUserNameRef.current.value = "";
+      passPasswordRef.current.value = "";
     }
 
     const newEntry = new PasswordEntry(undefined, passType, passUserName, passPassword);
