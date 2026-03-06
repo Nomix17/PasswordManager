@@ -110,26 +110,60 @@ export async function insertNewPasswordEntry (
   );
 }
 
-export async function insertPasswordsEntries (
+export async function updatePasswordsEntries(
   db: Database,
   sessionUserName: string,
-  newPasswords: PasswordEntry[] 
-): Promise<void> { 
+  newPasswords: PasswordEntry[]
+): Promise<void> {
+  if (newPasswords.length === 0) return;
 
-  const row =  await db.get(
+  const row = await db.get(
     "SELECT id FROM users WHERE userName = ?",
     [sessionUserName]
   );
+  if (!row) throw new Error("User not found");
 
-  if (!row)
-    throw new Error("User not found");
-
-  for(const passwordEntry of newPasswords) {
-    await db.run(
-      "REPLACE INTO passwords (userId, id, userName, type, password) VALUES (?, ?, ?, ?, ?)",
-      [row.id,passwordEntry.id, passwordEntry.userName, passwordEntry.type, passwordEntry.password],
+  await db.run("BEGIN TRANSACTION");
+  try {
+    const stmt = await db.prepare(
+      "REPLACE INTO passwords (userId, id, userName, type, password) VALUES (?, ?, ?, ?, ?)"
     );
+    try {
+      for (const passwordEntry of newPasswords) {
+        await stmt.run(
+          row.id,
+          passwordEntry.id,
+          passwordEntry.userName,
+          passwordEntry.type,
+          passwordEntry.password
+        );
+      }
+    } finally {
+      await stmt.finalize();
+    }
+    await db.run("COMMIT");
+  } catch (err) {
+    await db.run("ROLLBACK");
+    throw err;
   }
+}
+
+export async function removePasswordsEntries (
+  db: Database,
+  sessionUserName: string,
+  passwordEntry: PasswordEntry
+): Promise<void> {
+
+  const row = await db.get(
+    "SELECT id FROM users WHERE userName = ?",
+    [sessionUserName]
+  );
+  if (!row) throw new Error("User not found");
+
+  await db.run(
+    "DELETE FROM passwords WHERE userId = ? AND id = ? AND userName = ? AND type = ?",
+    [row.id, passwordEntry.id, passwordEntry.userName, passwordEntry.type ]
+  );
 }
 
 export async function getPasswordsByUserName(db: Database, userName: string): Promise<PasswordEntry[]> {
@@ -139,7 +173,7 @@ export async function getPasswordsByUserName(db: Database, userName: string): Pr
       INNER JOIN passwords p ON p.userId = u.id
       WHERE u.userName = ?
   `, [userName]);
-console.log(rows);
+
   return rows.map(
     row => new PasswordEntry(row.id, row.type, row.userName, row.password)
   );

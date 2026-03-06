@@ -1,4 +1,4 @@
-import { setupDb, validateLogin, signUp, getPasswordsByUserName, insertNewPasswordEntry, dbErrors, PasswordEntry, insertPasswordsEntries } from "./dbManager";
+import { setupDb, validateLogin, signUp, getPasswordsByUserName, dbErrors, PasswordEntry, updatePasswordsEntries, removePasswordsEntries } from "./dbManager";
 import express, { type Express } from "express";
 import cors from "cors";
 import { Database } from "sqlite";
@@ -132,15 +132,62 @@ function formatResponse(newPasswords: any) {
   );
 }
 
-app.post("/add_passwords", (req, res) => {
+app.post("/update_passwords", async (req, res) => {
   const { sessionUserName, sessionToken, newPasswords } = req.body;
 
   try {
     if(validateCredentials(sessionUserName, sessionToken)) {
-      insertPasswordsEntries(db, sessionUserName, formatResponse(newPasswords));
+      await updatePasswordsEntries(db, sessionUserName, formatResponse(newPasswords));
+
+      const passwordEntries: PasswordEntry[] | null = await getPasswordsByUserName(db, sessionUserName);
+
+      if(passwordEntries == null) {
+        return res.status(500).json({
+          success: false,
+          message: "An unexpected error occurred"
+        });
+      }
+
+      const updatedPasswords: any[] = passwordEntries.map(element => (element.toJson()));
+
       return res.status(200).json({
         success: true,
-        message: "Passwords where added Successfully",
+        message: "Passwords where Updated Successfully",
+        updated_passwords: updatedPasswords,
+      });
+
+    } else {
+      throw new Error("Invalid credentials");
+    }
+
+  } catch(err: any) {
+    console.error(err.message);
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
+});
+
+app.post("/remove_password", (req, res) => {
+  const { sessionUserName, sessionToken, passwordEntryToRemove } = req.body;
+
+  try {
+    if(validateCredentials(sessionUserName, sessionToken)) {
+      removePasswordsEntries(
+        db,
+        sessionUserName,
+        new PasswordEntry(
+          passwordEntryToRemove?.id,
+          passwordEntryToRemove?.type,
+          passwordEntryToRemove?.userName,
+          passwordEntryToRemove?.password
+        )
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: "Passwords where Updated Successfully",
       });
 
     } else {
