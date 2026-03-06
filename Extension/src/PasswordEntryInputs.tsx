@@ -1,13 +1,14 @@
 import { usePasswordsEntries } from "./contexts/PasswordsEntriesContext";
+import { useUserAuthData } from "./contexts/UserDataContext";
 import "./styles/PasswordEntryInputs.css";
 
 export class PasswordEntry {
-  id: string;
+  id: string | undefined;
   type: string;
   userName: string;
   password: string;
 
-  constructor(id: string, type: string, userName: string, password: string) {
+  constructor(id: string | undefined, type: string, userName: string, password: string) {
     this.id = id;
     this.type = type;
     this.userName = userName;
@@ -24,8 +25,31 @@ export class PasswordEntry {
   }
 };
 
+
+async function removePasswordEntryReq (
+  userName: string | undefined,
+  sessionToken: string | undefined,
+  passwordEntryToRemove: PasswordEntry | undefined
+) {
+  if(userName == null || sessionToken == null) return [];
+  const res = await fetch("http://localhost:8080/remove_password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sessionUserName: userName, sessionToken , passwordEntryToRemove})
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(`From Server: ${data.message}` || `From Server: HTTP error! Status: ${res.status}`);
+  }
+
+  return data;
+}
+
 export function PasswordEntryInputs ({passwordEntryIndex}:{passwordEntryIndex:number}){
   const passEntriesContext = usePasswordsEntries();
+  const authContext = useUserAuthData();
   const setPassEntry: React.Dispatch<React.SetStateAction<PasswordEntry[]>> | undefined = passEntriesContext?.setPasswordsEntries;
   const currentPassEntry: PasswordEntry | undefined = passEntriesContext?.passwordsEntries[passwordEntryIndex];
 
@@ -53,7 +77,11 @@ export function PasswordEntryInputs ({passwordEntryIndex}:{passwordEntryIndex:nu
     }
   }
 
-  const deletePassEntry = () => {
+  const deletePassEntry = async () => {
+    const sessionUserName = authContext?.userName;
+    const sessionToken = authContext?.sessionToken;
+
+    removePasswordEntryReq(sessionUserName, sessionToken, currentPassEntry);
     if (setPassEntry != null) {
       setPassEntry(data => {
         const updated = data.filter(
@@ -62,6 +90,7 @@ export function PasswordEntryInputs ({passwordEntryIndex}:{passwordEntryIndex:nu
         return updated;
       });
     }
+
   }
 
   return (

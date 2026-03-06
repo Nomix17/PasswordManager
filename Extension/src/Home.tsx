@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useUserAuthData } from "./contexts/UserDataContext";
 import { usePasswordsEntries } from "./contexts/PasswordsEntriesContext";
-import { useNavigate } from "react-router-dom";
 import { PasswordEntryInputs, PasswordEntry } from "./PasswordEntryInputs"; 
+import { NewPasswordManagerOverlay } from "./NewPassOverlay";
 import "./styles/Home.css"
 
 async function getPasswordsDataReq(userName: string | undefined, sessionToken: string | undefined ) {
@@ -24,7 +25,7 @@ async function getPasswordsDataReq(userName: string | undefined, sessionToken: s
 
 async function postPasswordsInServer(userName: string | undefined, sessionToken: string | undefined, passwords: any) {
   if(userName == null || sessionToken == null) return [];
-  const res = await fetch("http://localhost:8080/add_passwords", {
+  const res = await fetch("http://localhost:8080/update_passwords", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ sessionUserName: userName, sessionToken, newPasswords: passwords })
@@ -49,11 +50,12 @@ function formatPasswordEntries(data:any) {
 }
 
 export function Home() {
-const [notify, setNotify] = useState<{ message: string; success: boolean } | null>(null);
+  const [notify, setNotify] = useState<{ message: string; success: boolean } | null>(null);
   const authContext = useUserAuthData();
   const passEntryContext = usePasswordsEntries();
-
   const navigate = useNavigate();  
+
+  const [newPassOverlayVisibility, setNewPassOverlayVisibility] = useState<boolean>(false);
 
   const isUnauthenticated: boolean = (
     authContext?.userName == null || authContext?.userName.trim() === "" ||
@@ -69,7 +71,9 @@ const [notify, setNotify] = useState<{ message: string; success: boolean } | nul
     getPasswordsDataReq(authContext?.userName, authContext?.sessionToken)
     .then (
       passwordsData => {
-        passEntryContext?.setPasswordsEntries(formatPasswordEntries(passwordsData?.data));
+        passEntryContext?.setPasswordsEntries(
+          formatPasswordEntries(passwordsData?.data)
+        );
       }
     )
     .catch((err: any) => {
@@ -91,17 +95,26 @@ const [notify, setNotify] = useState<{ message: string; success: boolean } | nul
 
     try {
       const postRes = await postPasswordsInServer(authContext?.userName, authContext?.sessionToken, passwords);
+      if(postRes.success && postRes.updated_passwords) {
+        passEntryContext?.setPasswordsEntries(formatPasswordEntries(postRes.updated_passwords));
+      }
+
       setNotify({ message: postRes.message, success: postRes.success });
     } catch(err: any) {
       console.error(err);
+      setNotify({ message: err.message, success: false })
     }
   }
 
   const newPasswordEntry = () => {
+    setNewPassOverlayVisibility(true);
   }
 
   return (
     <>
+      { 
+        <NewPasswordManagerOverlay overlayVisibility={newPassOverlayVisibility} setOverlayVisibility={setNewPassOverlayVisibility} />
+      }
       {notify && (
         <div className={`notify-div ${notify.success ? "success" : "error"}`}>
           {notify.message}
