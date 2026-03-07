@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import { usePasswordsEntries } from "./contexts/PasswordsEntriesContext";
 import { PasswordEntry } from "./PasswordEntryInputs";
 import "./styles/NewPassOverlay.css";
+import Close  from "./assets/Close";
 
 interface Props {
   overlayVisibility: boolean;
@@ -56,7 +57,7 @@ export function NewPasswordManagerOverlay({ overlayVisibility, setOverlayVisibil
     <div className={overlayVisibility ? "newPassOverlay-div" : "newPassOverlay-div hidden"}>
       <div className="newPass-div">
         <button className="close-btn" type="submit" aria-label="Close" onClick={closeOverlay}>
-          ×
+          <Close />
         </button>
         <h1>New Password</h1>
 

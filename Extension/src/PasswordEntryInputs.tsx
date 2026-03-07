@@ -1,5 +1,6 @@
 import { usePasswordsEntries } from "./contexts/PasswordsEntriesContext";
 import { useUserAuthData } from "./contexts/UserDataContext";
+import Close  from "./assets/Close";
 import "./styles/PasswordEntryInputs.css";
 
 export class PasswordEntry {
@@ -115,7 +116,9 @@ export function PasswordEntryInputs ({passwordEntryIndex}:{passwordEntryIndex:nu
           />
         </div>
       </div>
-      <button type="button" className="deletePassEntry-btn" onClick={deletePassEntry}>✕</button>
+      <button type="button" className="deletePassEntry-btn" onClick={deletePassEntry}>
+        <Close/>
+      </button>
     </div>
   );
 }
