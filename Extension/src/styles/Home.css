@@ -22,6 +22,7 @@
   gap: 10px;
   align-items: center;
   flex-shrink: 0;
+  padding-bottom: 10px;
 }
 
 .topBar-div input {
@@ -131,6 +132,7 @@
   display:flex;
   justify-content: center;
   align-items: center;
+  padding-top: 10px;
 }
 
 /* ── Save Button ── */

@@ -81,8 +81,9 @@ export function PasswordEntryInputs ({passwordEntryIndex}:{passwordEntryIndex:nu
   const deletePassEntry = async () => {
     const sessionUserName = authContext?.userName;
     const sessionToken = authContext?.sessionToken;
-
-    removePasswordEntryReq(sessionUserName, sessionToken, currentPassEntry);
+    if(currentPassEntry?.id != null) {
+      removePasswordEntryReq(sessionUserName, sessionToken, currentPassEntry);
+    }
     if (setPassEntry != null) {
       setPassEntry(data => {
         const updated = data.filter(
