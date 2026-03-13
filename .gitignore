@@ -19,3 +19,5 @@ Server/build/
 Server/*.local
 Server/.idea/
 Server/dist
+
+tmux_env.sh
