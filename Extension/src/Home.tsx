@@ -51,6 +51,8 @@ function formatPasswordEntries(data:any) {
 
 export function Home() {
   const [notify, setNotify] = useState<{ message: string; success: boolean } | null>(null);
+  const [searchValue, setSearchValue] = useState<string>("");
+
   const authContext = useUserAuthData();
   const passEntryContext = usePasswordsEntries();
   const navigate = useNavigate();  
@@ -123,14 +125,20 @@ export function Home() {
 
       <div className="home-container">
         <div className="topBar-div">
-          <input placeholder="Search"/>
+          <input
+            placeholder="Search" 
+            onChange={event => setSearchValue(event?.target?.value.toLowerCase() ?? "")}
+          />
           <button type="submit" onClick={newPasswordEntry}>New</button>
         </div>
         <div className="passEntries-container">
           {
-            passEntryContext?.passwordsEntries.map((entry,index) => (
-              <PasswordEntryInputs key={entry.id} passwordEntryIndex={index}/>
-            ))
+            passEntryContext?.passwordsEntries
+              .map((entry:PasswordEntry,index:number) => ({entry,index}))
+              .filter(({entry}) => entry.type.toLowerCase().startsWith(searchValue) || searchValue.trim() === "")
+              .map(({entry,index}) => (
+                <PasswordEntryInputs key={entry.id} passwordEntryIndex={index}/>
+              ))
           }
         </div>
         <div className="save-div">
