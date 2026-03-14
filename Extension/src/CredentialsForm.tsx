@@ -78,7 +78,7 @@ export function CredentialsForm({formTitle, requestFunction}: {formTitle:string,
       <h1>{formTitle}</h1>
       <div className="form-div">
         <input className="username-input" placeholder="UserName" ref={userNameInput} />
-        <input className="password-input" placeholder="Password" ref={passwordInput} />
+        <input className="password-input" type="password" placeholder="Password" ref={passwordInput} />
         {responseMessage && (
           <p className={`response-message ${isError ? "response-error" : "response-success"}`}>
             {responseMessage}

@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { usePasswordsEntries } from "./contexts/PasswordsEntriesContext";
 import { useUserAuthData } from "./contexts/UserDataContext";
 import Close  from "./assets/Close";
+import OpenedEye from "./assets/OpenedEye";
+import ClosedEye from "./assets/ClosedEye";
 import "./styles/PasswordEntryInputs.css";
 
 export class PasswordEntry {
@@ -47,8 +50,8 @@ async function removePasswordEntryReq (
 
   return data;
 }
-
 export function PasswordEntryInputs ({passwordEntryIndex}:{passwordEntryIndex:number}){
+  const [displayPassword, setDisplayPassword] = useState<boolean>(false);
   const passEntriesContext = usePasswordsEntries();
   const authContext = useUserAuthData();
   const setPassEntry: React.Dispatch<React.SetStateAction<PasswordEntry[]>> | undefined = passEntriesContext?.setPasswordsEntries;
@@ -110,11 +113,22 @@ export function PasswordEntryInputs ({passwordEntryIndex}:{passwordEntryIndex:nu
 
         <div className="input-row">
           <p>Password:</p>
-          <input 
-            className="passwordEntry-input" 
-            defaultValue={currentPassEntry?.password ?? ""} 
-            onChange={passwordInputChanged}
-          />
+          <div className="input-container">
+            <input 
+              className="passwordEntry-input" 
+              defaultValue={currentPassEntry?.password ?? ""} 
+              onChange={passwordInputChanged}
+              type={displayPassword ? "text" : "password"}
+            />
+            <button 
+              type="submit" 
+              className="displayPassword" 
+              onClick={() => setDisplayPassword(state => !state)}
+            >
+              {displayPassword ? <ClosedEye/> : <OpenedEye/>}
+            </button>
+
+          </div>
         </div>
       </div>
       <button type="button" className="deletePassEntry-btn" onClick={deletePassEntry}>
