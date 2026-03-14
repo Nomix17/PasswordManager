@@ -49,7 +49,7 @@ export async function setupDb(dbPath:string): Promise<Database> {
     CREATE TABLE IF NOT EXISTS passwords (
       userId INTEGER,
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      userName INTEGER,
+      userName TEXT,
       type TEXT,
       password TEXT,
       FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE
