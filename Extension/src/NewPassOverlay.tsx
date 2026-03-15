@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { usePasswordsEntries } from "./contexts/PasswordsEntriesContext";
 import { PasswordEntry } from "./PasswordEntryInputs";
 import "./styles/NewPassOverlay.css";
@@ -19,6 +19,18 @@ export function NewPasswordManagerOverlay({ overlayVisibility, setOverlayVisibil
   const setPasswordEntries = usePasswordsEntries()?.setPasswordsEntries;
 
   const closeOverlay = () => setOverlayVisibility(false);
+
+
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOverlayVisibility(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleEscKey);
+    return () => window.removeEventListener("keydown", handleEscKey);
+  },[setOverlayVisibility]);
 
   const addNewPasswordEntry = () => {
     const passType = passTypeRef.current?.value.trim() ?? "";
@@ -53,8 +65,16 @@ export function NewPasswordManagerOverlay({ overlayVisibility, setOverlayVisibil
     closeOverlay();
   };
 
+  const handleEnterKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      addNewPasswordEntry();
+    }
+  }
+
   return (
-    <div className={overlayVisibility ? "newPassOverlay-div" : "newPassOverlay-div hidden"}>
+    <div 
+      className={overlayVisibility ? "newPassOverlay-div" : "newPassOverlay-div hidden"} 
+    >
       <div className="newPass-div">
         <button className="close-btn" type="submit" aria-label="Close" onClick={closeOverlay}>
           <Close />
@@ -65,16 +85,19 @@ export function NewPasswordManagerOverlay({ overlayVisibility, setOverlayVisibil
           ref={passTypeRef}
           className={`passType-input${errors.type ? " shake" : ""}`}
           placeholder="Type"
+          onKeyDown={handleEnterKey}
         />
         <input
           ref={passUserNameRef}
           className={`passUserName-input${errors.userName ? " shake" : ""}`}
           placeholder="Username / Email"
+          onKeyDown={handleEnterKey}
         />
         <input
           ref={passPasswordRef}
           className={`passPassword-input${errors.password ? " shake" : ""}`}
           placeholder="Password"
+          onKeyDown={handleEnterKey}
           type="password"
         />
 

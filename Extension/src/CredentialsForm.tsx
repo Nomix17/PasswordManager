@@ -1,4 +1,4 @@
-import { useState, useRef, type JSX } from "react";
+import React, { useState, useRef, type JSX } from "react";
 import "./styles/CredentialsForm.css"
 import { useNavigate } from 'react-router-dom';
 import { useUserAuthData } from "./contexts/UserDataContext";
@@ -58,6 +58,12 @@ export function CredentialsForm({formTitle, requestFunction}: {formTitle:string,
     }
   }
 
+  const handleEnterKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      getUserData();
+    }
+  };
+
   return (
     <div className="form-container">
 
@@ -77,8 +83,8 @@ export function CredentialsForm({formTitle, requestFunction}: {formTitle:string,
 
       <h1>{formTitle}</h1>
       <div className="form-div">
-        <input className="username-input" placeholder="UserName" ref={userNameInput} />
-        <input className="password-input" type="password" placeholder="Password" ref={passwordInput} />
+        <input className="username-input" placeholder="UserName" onKeyDown={handleEnterKey} ref={userNameInput} />
+        <input className="password-input" type="password" placeholder="Password" onKeyDown={handleEnterKey} ref={passwordInput} />
         {responseMessage && (
           <p className={`response-message ${isError ? "response-error" : "response-success"}`}>
             {responseMessage}

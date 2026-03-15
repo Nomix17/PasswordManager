@@ -123,7 +123,7 @@ export function Home() {
         </div>
       )}
 
-      <div className="home-container">
+      <div className="home-container" inert={newPassOverlayVisibility}>
         <div className="topBar-div">
           <input
             placeholder="Search" 
