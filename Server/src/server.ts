@@ -127,7 +127,7 @@ app.post("/get_passwords", async (req, res) => {
 function formatResponse(newPasswords: any) {
   return newPasswords.map(
     (row: any) => (
-      new PasswordEntry(row?.id, row?.type, row?.userName, row?.password)
+      new PasswordEntry(row?.id, row?.type, row?.userName, row?.password, row?.iv)
     )
   );
 }
@@ -181,7 +181,8 @@ app.post("/remove_password", (req, res) => {
           passwordEntryToRemove?.id,
           passwordEntryToRemove?.type,
           passwordEntryToRemove?.userName,
-          passwordEntryToRemove?.password
+          passwordEntryToRemove?.password,
+          passwordEntryToRemove?.iv
         )
       );
 

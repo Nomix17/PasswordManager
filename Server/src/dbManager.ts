@@ -14,19 +14,23 @@ export class PasswordEntry {
   type: string;
   userName: string;
   password: string;
-  constructor(id:string, type:string, userName:string, password:string) {
+  iv: string;
+
+  constructor(id:string, type:string, userName:string, password:string, iv: string) {
     this.id = id;
     this.type = type;
     this.userName = userName;
     this.password = password;
+    this.iv = iv;
   }
 
-  toJson(): {id:string, type: string, userName: string, password: string } {
+  toJson(): {id:string, type: string, userName: string, password: string, iv: string } {
     return {
       id: this.id,
       type: this.type,
       userName: this.userName,
-      password: this.password
+      password: this.password,
+      iv: this.iv
     };
   }
 };
@@ -52,6 +56,7 @@ export async function setupDb(dbPath:string): Promise<Database> {
       userName TEXT,
       type TEXT,
       password TEXT,
+      iv TEXT,
       FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
@@ -90,26 +95,6 @@ export async function signUp( db: Database, userName:string, password:string ): 
   return { success: true, error_type:null, error_msg:"" }
 }
 
-export async function insertNewPasswordEntry (
-  db: Database,
-  sessionUserName: string,
-  passwordEntry: PasswordEntry
-): Promise<void>{
-
-  const row =  await db.get(
-    "SELECT id FROM users WHERE userName = ?",
-    [sessionUserName]
-  );
-
-  if (!row)
-    throw new Error("User not found");
-
-  await db.run(
-    "INSERT INTO passwords (userId, userName, type, password) VALUES (?, ?, ?, ?)",
-    [row.id, passwordEntry.userName, passwordEntry.type, passwordEntry.password],
-  );
-}
-
 export async function updatePasswordsEntries(
   db: Database,
   sessionUserName: string,
@@ -126,7 +111,7 @@ export async function updatePasswordsEntries(
   await db.run("BEGIN TRANSACTION");
   try {
     const stmt = await db.prepare(
-      "REPLACE INTO passwords (userId, id, userName, type, password) VALUES (?, ?, ?, ?, ?)"
+      "REPLACE INTO passwords (userId, id, userName, type, password, iv) VALUES (?, ?, ?, ?, ?, ?)"
     );
     try {
       for (const passwordEntry of newPasswords) {
@@ -135,7 +120,8 @@ export async function updatePasswordsEntries(
           passwordEntry.id,
           passwordEntry.userName,
           passwordEntry.type,
-          passwordEntry.password
+          passwordEntry.password,
+          passwordEntry.iv
         );
       }
     } finally {
@@ -175,7 +161,7 @@ export async function getPasswordsByUserName(db: Database, userName: string): Pr
   `, [userName]);
 
   return rows.map(
-    row => new PasswordEntry(row.id, row.type, row.userName, row.password)
+    row => new PasswordEntry(row.id, row.type, row.userName, row.password, row.iv)
   );
 }
 

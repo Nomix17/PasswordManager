@@ -3,6 +3,7 @@ import "./styles/CredentialsForm.css"
 import { useNavigate } from 'react-router-dom';
 import { useUserAuthData } from "./contexts/UserDataContext";
 import { LoadingGif } from "./LoadingGif";
+import { Cryptography } from "./Cryptography";
 
 export function CredentialsForm({formTitle, requestFunction}: {formTitle:string, requestFunction:Function}): JSX.Element {
   const context = useUserAuthData();
@@ -19,12 +20,19 @@ export function CredentialsForm({formTitle, requestFunction}: {formTitle:string,
     setResponseMessage(null);
     setIsError(false);
     try {
-      const data = await requestFunction(userName, password);
+      const hashedPass = await Cryptography.hash(password);
+      const data = await requestFunction(userName, hashedPass);
       context?.setSessionToken(data.sessionToken);
       context?.setUserName(userName);
       if (data.success) {
-        setResponseMessage("Account created! Redirecting...");
-        navigate("/home");
+        try {
+          const derivatedKey = await Cryptography.derivateKeyFromPassword(userName,password);
+          sessionStorage.setItem("DerivatedKey",derivatedKey);
+          setResponseMessage("Account created! Redirecting...");
+          navigate("/home");
+        } catch(error) {
+          console.log(error);
+        }
       } else {
         setIsError(true);
         setResponseMessage(data.message || `${formTitle} failed. Please try again.`);
@@ -37,7 +45,6 @@ export function CredentialsForm({formTitle, requestFunction}: {formTitle:string,
       setIsLoading(false);
     }
   };
-
 
   const getUserData = () => {
     const userNameValue = userNameInput.current?.value;

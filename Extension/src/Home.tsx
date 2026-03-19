@@ -4,6 +4,7 @@ import { useUserAuthData } from "./contexts/UserDataContext";
 import { usePasswordsEntries } from "./contexts/PasswordsEntriesContext";
 import { PasswordEntryInputs, PasswordEntry } from "./PasswordEntryInputs"; 
 import { NewPasswordManagerOverlay } from "./NewPassOverlay";
+import { Cryptography } from "./Cryptography";
 import "./styles/Home.css"
 
 async function getPasswordsDataReq(userName: string | undefined, sessionToken: string | undefined ) {
@@ -17,7 +18,11 @@ async function getPasswordsDataReq(userName: string | undefined, sessionToken: s
   const data = await res.json();
 
   if (!res.ok) {
-    throw new Error(`From Server: ${data.message}` || `From Server: HTTP error! Status: ${res.status}`);
+    throw new Error(
+      data.message 
+        ? `From Server: ${data.message}` 
+        : `From Server: HTTP error! Status: ${res.status}`
+    );
   }
 
   return data;
@@ -34,7 +39,11 @@ async function postPasswordsInServer(userName: string | undefined, sessionToken:
   const data = await res.json();
 
   if (!res.ok) {
-    throw new Error(`From Server: ${data.message}` || `From Server: HTTP error! Status: ${res.status}`);
+    throw new Error(
+      data.message 
+        ? `From Server: ${data.message}` 
+        : `From Server: HTTP error! Status: ${res.status}`
+    );
   }
 
   return data;
@@ -44,9 +53,9 @@ function formatPasswordEntries(data:any) {
   if(data == null) return[];
   return data.map(
     (row: any) => (
-      new PasswordEntry(row?.id, row?.type, row?.userName, row?.password)
+      new PasswordEntry(row?.id, row?.type, row?.userName, row?.password, row?.iv)
     )
-  );
+  )
 }
 
 export function Home() {
@@ -72,14 +81,19 @@ export function Home() {
   useEffect(() => {
     getPasswordsDataReq(authContext?.userName, authContext?.sessionToken)
     .then (
-      passwordsData => {
-        passEntryContext?.setPasswordsEntries(
-          formatPasswordEntries(passwordsData?.data)
+      async(passwordsData) => {
+        const decryptedPasswords = await decryptPasswordsEntries(
+          formatPasswordEntries(passwordsData.data)
         );
+        if(decryptedPasswords != null) {
+          passEntryContext?.setPasswordsEntries(
+            decryptedPasswords
+          );
+        }
       }
     )
     .catch((err: any) => {
-      console.error(err.message);
+      console.error(err);
     })
   }, [passEntryContext?.setPasswordsEntries, authContext]);
 
@@ -90,15 +104,23 @@ export function Home() {
   }, [notify]);
 
   const sendPasswords = async () => {
-    const passwords =  
-      passEntryContext?.passwordsEntries.map(
+    if(passEntryContext?.passwordsEntries == null) return;
+    const encryptedPasswordsEntries = await encryptPasswordsEntries(passEntryContext?.passwordsEntries);
+    if(encryptedPasswordsEntries == null) return;
+
+    const passwords =
+      encryptedPasswordsEntries.map(
       (passEntry: PasswordEntry) => (passEntry.formatToJson())
     );
 
     try {
       const postRes = await postPasswordsInServer(authContext?.userName, authContext?.sessionToken, passwords);
       if(postRes.success && postRes.updated_passwords) {
-        passEntryContext?.setPasswordsEntries(formatPasswordEntries(postRes.updated_passwords));
+        const decryptedPasswords = await decryptPasswordsEntries(
+          formatPasswordEntries(postRes.updated_passwords)
+        );
+        if(decryptedPasswords == null) return;
+        passEntryContext?.setPasswordsEntries(decryptedPasswords);
       }
 
       setNotify({ message: postRes.message, success: postRes.success });
@@ -149,4 +171,43 @@ export function Home() {
       </div>
     </>
   );
+}
+
+async function encryptPasswordsEntries(passwordEntries: PasswordEntry[]):Promise<PasswordEntry[] | null> {
+  const key = await Cryptography.getDerivateKey();
+  if(key == null) return null;
+  return Promise.all(
+    passwordEntries.map(
+      async (passEntry: PasswordEntry) => {
+        const [encryptedPass, iv] = await Cryptography.encrypt(passEntry.password, key);
+        return new PasswordEntry(
+          passEntry?.id,
+          passEntry?.type,
+          passEntry?.userName,
+          encryptedPass,
+          iv
+        )
+      }
+    )
+  )
+}
+
+async function decryptPasswordsEntries(passwordEntries: PasswordEntry[]): Promise<PasswordEntry[] | null> {
+  const key = await Cryptography.getDerivateKey();
+  if(key == null) return null;
+  return Promise.all(
+    passwordEntries.filter((passEntry:PasswordEntry) => passEntry.iv != null)
+    .map(
+      async (passEntry: PasswordEntry) => {
+        const decryptedPass = await Cryptography.decrypt(passEntry.password, passEntry.iv!, key);
+        return new PasswordEntry(
+          passEntry?.id,
+          passEntry?.type,
+          passEntry?.userName,
+          decryptedPass,
+          passEntry.iv
+        )
+      }
+    )
+  )
 }

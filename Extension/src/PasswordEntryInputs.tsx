@@ -11,20 +11,29 @@ export class PasswordEntry {
   type: string;
   userName: string;
   password: string;
+  iv: string | undefined;
 
-  constructor(id: string | undefined, type: string, userName: string, password: string) {
+  constructor(id: string | undefined, type: string, userName: string, password: string, iv?: string) {
     this.id = id;
     this.type = type;
     this.userName = userName;
     this.password = password;
+    this.iv = iv;
   }
 
-  formatToJson(): any {
+  formatToJson(): {
+    id:string | undefined,
+    type: string,
+    userName: string,
+    password: string,
+    iv: string | undefined 
+  } {
     return {
       id: this.id,
       type: this.type,
       userName: this.userName,
-      password: this.password
+      password: this.password,
+      iv: this.iv
     };
   }
 };
