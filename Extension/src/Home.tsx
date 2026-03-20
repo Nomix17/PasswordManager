@@ -174,7 +174,7 @@ export function Home() {
 }
 
 async function encryptPasswordsEntries(passwordEntries: PasswordEntry[]):Promise<PasswordEntry[] | null> {
-  const key = await Cryptography.getDerivateKey();
+  const key: CryptoKey | null = Cryptography.getDerivateKey();
   if(key == null) return null;
   return Promise.all(
     passwordEntries.map(

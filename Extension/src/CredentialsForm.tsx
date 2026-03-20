@@ -20,14 +20,16 @@ export function CredentialsForm({formTitle, requestFunction}: {formTitle:string,
     setResponseMessage(null);
     setIsError(false);
     try {
-      const hashedPass = await Cryptography.hash(password);
+      const hashedPass = await Cryptography.hashSHA256(password);
       const data = await requestFunction(userName, hashedPass);
       context?.setSessionToken(data.sessionToken);
       context?.setUserName(userName);
       if (data.success) {
         try {
-          const derivatedKey = await Cryptography.derivateKeyFromPassword(userName,password);
-          sessionStorage.setItem("DerivatedKey",derivatedKey);
+          const res = await Cryptography.derivateKeyFromPassword(userName,password);
+          if (!res.success)
+            throw new Error(res.err_msg ?? "Unknown Error");
+
           setResponseMessage("Account created! Redirecting...");
           navigate("/home");
         } catch(error) {

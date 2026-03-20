@@ -1,5 +1,11 @@
 export class Cryptography {
-  static async decrypt(cipherTextBase64: string, ivBase64: string, key: CryptoKey) {
+  private static _key: CryptoKey | null = null;
+
+  static async decrypt(
+    cipherTextBase64: string,
+    ivBase64: string,
+    key: CryptoKey
+  ) {
     const encryptedBytes = new Uint8Array(
       atob(cipherTextBase64).split("").map(c => c.charCodeAt(0))
     );
@@ -39,48 +45,51 @@ export class Cryptography {
     return [encryptedBase64, ivBase64];
   }
 
-  static async getDerivateKey(): Promise<CryptoKey | null> {
-    const key = sessionStorage.getItem("DerivatedKey");
-    if(key == null || key.trim() === "") return null;
-    const KeyBuffer: ArrayBuffer = Uint8Array.fromHex(key);
-    return await window.crypto.subtle.importKey(
-      "raw",
-      KeyBuffer,
-      { name: "AES-GCM", length: 256 },
-      false,
-      ["encrypt", "decrypt"]
-    );
+  static getDerivateKey(): CryptoKey | null {
+    return this._key;
   }
 
-  static async derivateKeyFromPassword(userName:string ,password: string): Promise<string> {
-    const encoder = new TextEncoder();
-    const salt = Uint8Array.fromHex(await Cryptography.hash(userName)).slice(0, 16);
-    const keyMaterial = await window.crypto.subtle.importKey(
-      "raw",
-      encoder.encode(password),
-      "PBKDF2",
-      false,
-      ["deriveBits", "deriveKey"]
-    );
-    const derivatedKey = await window.crypto.subtle.deriveKey(
-      {
-        name: "PBKDF2",
-        salt,
-        iterations: 100000,
-        hash: "SHA-256"
-      },
-      keyMaterial,
-      { name:"AES-GCM", length:256 },
-      true,
-      ["encrypt", "decrypt"]
-    );
+  static async derivateKeyFromPassword(
+      userName:string,
+      password: string
+  ): Promise<{success:boolean, err_msg:string | null}> {
+    try {
+      const encoder = new TextEncoder();
+      const salt = Uint8Array.fromHex(
+          await Cryptography.hashSHA256(userName)
+        ).slice(0, 16);
 
-    return new Uint8Array(
-      await window.crypto.subtle.exportKey("raw",derivatedKey)
-    ).toHex();
+      const keyMaterial = await window.crypto.subtle.importKey(
+        "raw",
+        encoder.encode(password),
+        "PBKDF2",
+        false,
+        ["deriveBits", "deriveKey"]
+      );
+      this._key = await window.crypto.subtle.deriveKey(
+        {
+          name: "PBKDF2",
+          salt,
+          iterations: 100000,
+          hash: "SHA-256"
+        },
+        keyMaterial,
+        { name:"AES-GCM", length:256 },
+        false,
+        ["encrypt", "decrypt"]
+      );
+
+      return {success: true, err_msg: null};
+    } catch (error: unknown) {
+      console.error(error);
+      return {
+        success: false,
+        err_msg: error instanceof Error ? error.message : String(error),
+      };
+    }
   }
 
-  static async hash(data:string): Promise<string> {
+  static async hashSHA256(data:string): Promise<string> {
     const encoder = new TextEncoder();
     const encodedData = encoder.encode(data);
     const hashBuffer: ArrayBuffer = await window.crypto.subtle.digest("SHA-256",encodedData);
