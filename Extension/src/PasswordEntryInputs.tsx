@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { usePasswordsEntries } from "./contexts/PasswordsEntriesContext";
 import { useUserAuthData } from "./contexts/UserDataContext";
-import Close  from "./assets/Close";
-import OpenedEye from "./assets/OpenedEye";
-import ClosedEye from "./assets/ClosedEye";
+import { X, Eye, EyeOff } from "lucide-react";
 import "./styles/PasswordEntryInputs.css";
 
 export class PasswordEntry {
@@ -134,14 +132,14 @@ export function PasswordEntryInputs ({passwordEntryIndex}:{passwordEntryIndex:nu
               className="displayPassword" 
               onClick={() => setDisplayPassword(state => !state)}
             >
-              {displayPassword ? <ClosedEye/> : <OpenedEye/>}
+              {displayPassword ? <EyeOff/> : <Eye/>}
             </button>
 
           </div>
         </div>
       </div>
       <button type="button" className="deletePassEntry-btn" onClick={deletePassEntry}>
-        <Close/>
+        <X/>
       </button>
     </div>
   );

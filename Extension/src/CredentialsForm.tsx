@@ -4,8 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { useUserAuthData } from "./contexts/UserDataContext";
 import { LoadingGif } from "./LoadingGif";
 import { Cryptography } from "./Cryptography";
+import { checkPasswordStrength } from "./checkPasswordStrength";
 
-export function CredentialsForm({formTitle, requestFunction}: {formTitle:string, requestFunction:Function}): JSX.Element {
+export function CredentialsForm({formTitle, requestFunction}: {
+  formTitle:string,
+  requestFunction:Function
+}): JSX.Element {
+
   const context = useUserAuthData();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -53,9 +58,15 @@ export function CredentialsForm({formTitle, requestFunction}: {formTitle:string,
     const passwordValue = passwordInput.current?.value;
 
     if( userNameValue != null && passwordValue != null ) {
-      if( userNameValue.trim() !== "" && passwordValue.trim() !== "") {
-        setResponseMessage("")
-        sendCredential(userNameValue, passwordValue);
+      if(userNameValue.trim() !== "" && passwordValue.trim() !== "") {
+        const passwordStrenghtRes = checkPasswordStrength(passwordValue)
+        const passwordIsValid = passwordStrenghtRes?.success || formTitle.toLowerCase() === "login";
+        if(passwordIsValid) {
+          setResponseMessage("")
+          sendCredential(userNameValue, passwordValue);
+        } else {
+          setResponseMessage(passwordStrenghtRes?.message)
+        }
 
       } else if (userNameValue.trim() !== "") {
         setResponseMessage("Please enter your password")
