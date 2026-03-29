@@ -1,17 +1,15 @@
 import React, { useState, useRef, type JSX } from "react";
 import "./styles/CredentialsForm.css"
-import { useNavigate } from 'react-router-dom';
-import { useUserAuthData } from "./contexts/UserDataContext";
 import { LoadingGif } from "./LoadingGif";
 import { Cryptography } from "./Cryptography";
 import { checkPasswordStrength } from "./checkPasswordStrength";
+import { Storage } from "./Storage";
 
 export function CredentialsForm({formTitle, requestFunction}: {
   formTitle:string,
   requestFunction:Function
 }): JSX.Element {
 
-  const context = useUserAuthData();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [responseMessage, setResponseMessage] = useState<string | null>(null);
@@ -27,8 +25,8 @@ export function CredentialsForm({formTitle, requestFunction}: {
     try {
       const hashedPass = await Cryptography.hashSHA256(password);
       const data = await requestFunction(userName, hashedPass);
-      context?.setSessionToken(data.sessionToken);
-      context?.setUserName(userName);
+      await Storage.set("sessionToken",data.sessionToken);
+      await Storage.set("userName",userName);
       if (data.success) {
         try {
           const res = await Cryptography.derivateKeyFromPassword(userName,password);

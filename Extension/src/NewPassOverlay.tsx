@@ -18,13 +18,13 @@ export function NewPasswordManagerOverlay({ overlayVisibility, setOverlayVisibil
   const [passwordWarningMessage, setPasswordWarningMessage] = useState("");
   const [errors, setErrors] = useState({ type: false, userName: false, password: false });
 
-  const setPasswordEntries = usePasswordsEntries()?.setPasswordsEntries;
+  const passEntriesContext = usePasswordsEntries();
+  const setPasswordEntries = passEntriesContext?.setPasswordsEntries;
 
   const closeOverlay = () => {
     setOverlayVisibility(false);
     setPasswordWarningMessage("");
   }
-
 
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
@@ -69,7 +69,6 @@ export function NewPasswordManagerOverlay({ overlayVisibility, setOverlayVisibil
 
     const newEntry = new PasswordEntry(undefined, passType, passUserName, passPassword);
     setPasswordEntries?.((data: PasswordEntry[]) => [...data, newEntry]);
-
     closeOverlay();
   };
 

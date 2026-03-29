@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { usePasswordsEntries } from "./contexts/PasswordsEntriesContext";
-import { useUserAuthData } from "./contexts/UserDataContext";
+import { Storage } from "./Storage";
 import { X, Eye, EyeOff } from "lucide-react";
 import "./styles/PasswordEntryInputs.css";
 
@@ -60,8 +60,8 @@ async function removePasswordEntryReq (
 export function PasswordEntryInputs ({passwordEntryIndex}:{passwordEntryIndex:number}){
   const [displayPassword, setDisplayPassword] = useState<boolean>(false);
   const passEntriesContext = usePasswordsEntries();
-  const authContext = useUserAuthData();
-  const setPassEntry: React.Dispatch<React.SetStateAction<PasswordEntry[]>> | undefined = passEntriesContext?.setPasswordsEntries;
+
+  const setPassEntry = passEntriesContext?.setPasswordsEntries;
   const currentPassEntry: PasswordEntry | undefined = passEntriesContext?.passwordsEntries[passwordEntryIndex];
 
   const userNameInputChanged = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -89,10 +89,10 @@ export function PasswordEntryInputs ({passwordEntryIndex}:{passwordEntryIndex:nu
   }
 
   const deletePassEntry = async () => {
-    const sessionUserName = authContext?.userName;
-    const sessionToken = authContext?.sessionToken;
+    const userName: string = await Storage.get("userName");
+    const sessionToken: string = await Storage.get("sessionToken");
     if(currentPassEntry?.id != null) {
-      removePasswordEntryReq(sessionUserName, sessionToken, currentPassEntry);
+      removePasswordEntryReq(userName, sessionToken, currentPassEntry);
     }
     if (setPassEntry != null) {
       setPassEntry(data => {
@@ -102,7 +102,6 @@ export function PasswordEntryInputs ({passwordEntryIndex}:{passwordEntryIndex:nu
         return updated;
       });
     }
-
   }
 
   return (

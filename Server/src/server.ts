@@ -39,6 +39,8 @@ app.use(express.json());
 
 app.post("/login", async (req, res) => {
   const { userName, password } = req.body;
+  console.log(`Received login request from the alleged: ${userName}`);
+
   const loginIsValide = await validateLogin(db, userName, password);
   if (loginIsValide) {
     const sessionToken = generateSessionKey(password);
@@ -61,8 +63,9 @@ app.post("/login", async (req, res) => {
 
 app.post("/sign_up", async(req, res) => {
   const { userName, password } = req.body;
-  const signUpRes = await signUp(db, userName, password);
+  console.log(`Received signup request from the alleged: ${userName}`);
 
+  const signUpRes = await signUp(db, userName, password);
   if (signUpRes.success) {
     const sessionToken = generateSessionKey(password);
     const newUser: userSession = new userSession(userName, sessionToken);
@@ -93,6 +96,8 @@ app.post("/sign_up", async(req, res) => {
 
 app.post("/get_passwords", async (req, res) => {
   const { sessionUserName, sessionToken } = req.body;
+  console.log(`Received get passwords request from ${sessionUserName}`);
+
   if(typeof sessionUserName !== "string" || typeof sessionToken !== "string") {
     return res.status(401).json({
       success: false,
@@ -134,6 +139,7 @@ function formatResponse(newPasswords: any) {
 
 app.post("/update_passwords", async (req, res) => {
   const { sessionUserName, sessionToken, newPasswords } = req.body;
+  console.log(`Received passwords update request from ${sessionUserName}`);
 
   try {
     if(validateCredentials(sessionUserName, sessionToken)) {

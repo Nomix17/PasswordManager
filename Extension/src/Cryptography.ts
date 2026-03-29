@@ -1,5 +1,6 @@
+import { Storage } from "./Storage";
+
 export class Cryptography {
-  private static _key: CryptoKey | null = null;
 
   static async decrypt(
     cipherTextBase64: string,
@@ -45,10 +46,6 @@ export class Cryptography {
     return [encryptedBase64, ivBase64];
   }
 
-  static getDerivateKey(): CryptoKey | null {
-    return this._key;
-  }
-
   static async derivateKeyFromPassword(
       userName:string,
       password: string
@@ -66,7 +63,7 @@ export class Cryptography {
         false,
         ["deriveBits", "deriveKey"]
       );
-      this._key = await window.crypto.subtle.deriveKey(
+      const Key: CryptoKey = await window.crypto.subtle.deriveKey(
         {
           name: "PBKDF2",
           salt,
@@ -78,7 +75,7 @@ export class Cryptography {
         false,
         ["encrypt", "decrypt"]
       );
-
+      await Storage.set("derivateKey",Key);
       return {success: true, err_msg: null};
     } catch (error: unknown) {
       console.error(error);

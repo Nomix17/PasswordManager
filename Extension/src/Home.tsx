@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUserAuthData } from "./contexts/UserDataContext";
 import { usePasswordsEntries } from "./contexts/PasswordsEntriesContext";
 import { PasswordEntryInputs, PasswordEntry } from "./PasswordEntryInputs"; 
 import { NewPasswordManagerOverlay } from "./NewPassOverlay";
 import { Cryptography } from "./Cryptography";
+import { Storage } from "./Storage";
 import "./styles/Home.css"
 
 async function getPasswordsDataReq(userName: string | undefined, sessionToken: string | undefined ) {
@@ -57,45 +57,52 @@ function formatPasswordEntries(data:any) {
     )
   )
 }
-
 export function Home() {
   const [notify, setNotify] = useState<{ message: string; success: boolean } | null>(null);
   const [searchValue, setSearchValue] = useState<string>("");
 
-  const authContext = useUserAuthData();
   const passEntryContext = usePasswordsEntries();
   const navigate = useNavigate();  
 
   const [newPassOverlayVisibility, setNewPassOverlayVisibility] = useState<boolean>(false);
 
-  const isUnauthenticated: boolean = (
-    authContext?.userName == null || authContext?.userName.trim() === "" ||
-    authContext?.sessionToken == null || authContext?.sessionToken.trim() === ""
-  );
-
-  useEffect(() => {
-    if(isUnauthenticated)
-      navigate("/login");
-  },[isUnauthenticated, navigate]);
-
-  useEffect(() => {
-    getPasswordsDataReq(authContext?.userName, authContext?.sessionToken)
-    .then (
-      async(passwordsData) => {
-        const decryptedPasswords = await decryptPasswordsEntries(
-          formatPasswordEntries(passwordsData.data)
-        );
-        if(decryptedPasswords != null) {
-          passEntryContext?.setPasswordsEntries(
-            decryptedPasswords
+    const loadPasswords = async () => {
+      const userName: string = await Storage.get("userName");
+      const sessionToken: string = await Storage.get("sessionToken");
+      getPasswordsDataReq(userName, sessionToken)
+      .then (
+        async(passwordsData) => {
+          const decryptedPasswords = await decryptPasswordsEntries(
+            formatPasswordEntries(passwordsData.data)
           );
+          if(decryptedPasswords != null) {
+            passEntryContext?.setPasswordsEntries(
+              decryptedPasswords
+            );
+          }
         }
-      }
-    )
-    .catch((err: any) => {
-      console.error(err);
-    })
-  }, [passEntryContext?.setPasswordsEntries, authContext]);
+      )
+      .catch((err: any) => {
+        console.error(err);
+      })
+    }
+
+  useEffect(() => {
+    (async () => {
+      const userName: string = await Storage.get("userName");
+      const sessionToken: string = await Storage.get("sessionToken");
+      const isUnauthenticated: boolean = (
+        userName == null || userName.trim() === "" ||
+        sessionToken == null || sessionToken.trim() === ""
+      );
+      if(isUnauthenticated)
+        navigate("/login");
+    })();
+  },[]);
+
+  useEffect(() => {
+    loadPasswords();
+  }, [passEntryContext?.setPasswordsEntries]);
 
   useEffect(() => {
     if (!notify) return;
@@ -104,22 +111,28 @@ export function Home() {
   }, [notify]);
 
   const sendPasswords = async () => {
-    if(passEntryContext?.passwordsEntries == null) return;
-    const encryptedPasswordsEntries = await encryptPasswordsEntries(passEntryContext?.passwordsEntries);
-    if(encryptedPasswordsEntries == null) return;
-
-    const passwords =
-      encryptedPasswordsEntries.map(
-      (passEntry: PasswordEntry) => (passEntry.formatToJson())
-    );
-
     try {
-      const postRes = await postPasswordsInServer(authContext?.userName, authContext?.sessionToken, passwords);
+      if(passEntryContext?.passwordsEntries == null) 
+        throw new Error("Passwords entires are undefined");
+
+      const encryptedPasswordsEntries = await encryptPasswordsEntries(passEntryContext?.passwordsEntries);
+      if(encryptedPasswordsEntries == null)
+        throw new Error("Failed to Encrypt Password Entries");
+
+      const passwords =
+        encryptedPasswordsEntries.map(
+        (passEntry: PasswordEntry) => (passEntry.formatToJson())
+      );
+
+      const userName: string = await Storage.get("userName");
+      const sessionToken: string = await Storage.get("sessionToken");
+      const postRes = await postPasswordsInServer(userName, sessionToken, passwords);
       if(postRes.success && postRes.updated_passwords) {
         const decryptedPasswords = await decryptPasswordsEntries(
           formatPasswordEntries(postRes.updated_passwords)
         );
-        if(decryptedPasswords == null) return;
+        if(decryptedPasswords == null) 
+          throw new Error("Failed to decrypt passwords");
         passEntryContext?.setPasswordsEntries(decryptedPasswords);
       }
 
@@ -158,8 +171,8 @@ export function Home() {
             passEntryContext?.passwordsEntries
               .map((entry:PasswordEntry,index:number) => ({entry,index}))
               .filter(({entry}) => entry.type.toLowerCase().startsWith(searchValue) || searchValue.trim() === "")
-              .map(({entry,index}) => (
-                <PasswordEntryInputs key={entry.id} passwordEntryIndex={index}/>
+              .map(({ entry, index }, filteredIndex) => (
+                <PasswordEntryInputs key={`${entry.id}-${entry.userName}-${filteredIndex}`} passwordEntryIndex={index} />
               ))
           }
         </div>
@@ -174,7 +187,7 @@ export function Home() {
 }
 
 async function encryptPasswordsEntries(passwordEntries: PasswordEntry[]):Promise<PasswordEntry[] | null> {
-  const key: CryptoKey | null = Cryptography.getDerivateKey();
+  const key: CryptoKey | null = await Storage.get("derivateKey");
   if(key == null) return null;
   return Promise.all(
     passwordEntries.map(
@@ -193,7 +206,7 @@ async function encryptPasswordsEntries(passwordEntries: PasswordEntry[]):Promise
 }
 
 async function decryptPasswordsEntries(passwordEntries: PasswordEntry[]): Promise<PasswordEntry[] | null> {
-  const key = await Cryptography.getDerivateKey();
+  const key: CryptoKey | null = await Storage.get("derivateKey");
   if(key == null) return null;
   return Promise.all(
     passwordEntries.filter((passEntry:PasswordEntry) => passEntry.iv != null)
