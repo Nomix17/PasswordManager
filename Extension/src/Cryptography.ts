@@ -55,9 +55,9 @@ export class Cryptography {
   ): Promise<{success:boolean, err_msg:string | null}> {
     try {
       const encoder = new TextEncoder();
-      const salt = Uint8Array.fromHex(
-          await Cryptography.hashSHA256(userName)
-        ).slice(0, 16);
+      const salt = this.fromHex(
+        await Cryptography.hashSHA256(userName)
+      ).slice(0, 16);
 
       const keyMaterial = await window.crypto.subtle.importKey(
         "raw",
@@ -93,7 +93,22 @@ export class Cryptography {
     const encoder = new TextEncoder();
     const encodedData = encoder.encode(data);
     const hashBuffer: ArrayBuffer = await window.crypto.subtle.digest("SHA-256",encodedData);
-    const hashHex: string = new Uint8Array(hashBuffer).toHex();
+    const hashHex: string = this.toHex(new Uint8Array(hashBuffer));
     return hashHex;
+  }
+
+  static toHex(arr: Uint8Array): string {
+    return Array.from(arr, (num) => ('00' + num.toString(16)).slice(-2)).join('');
+  }
+
+  static fromHex(hexStr: string): Uint8Array {
+    if (hexStr.length % 2 !== 0) throw new Error('Invalid hex string');
+
+    const arr: number[] = [];
+    for (let i = 0; i < hexStr.length; i += 2) {
+      const num: number = parseInt(hexStr.substring(i, i + 2), 16);
+      arr.push(num);
+    }
+    return new Uint8Array(arr);
   }
 }
