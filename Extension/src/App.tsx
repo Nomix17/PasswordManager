@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
+import { HashRouter, Route, Routes, Navigate } from 'react-router-dom';
 import { UserAuthDataProvider } from "./contexts/UserDataContext";
 import { PasswordEntriesProvider } from "./contexts/PasswordsEntriesContext";
 import { Login } from './Login'
@@ -11,14 +11,14 @@ function App() {
   return (
     <UserAuthDataProvider>
         <PasswordEntriesProvider>
-        <BrowserRouter>
+        <HashRouter>
           <Routes>
             <Route path="/" element={<Navigate to="/home"/>}/>
             <Route path="/login" element={<Login/>}/>
             <Route path="/sign_up" element={<SignUp/>}/>
             <Route path="/home" element={<Home/>}/>
           </Routes>
-        </BrowserRouter>
+        </HashRouter>
       </PasswordEntriesProvider>
     </UserAuthDataProvider>
   );
