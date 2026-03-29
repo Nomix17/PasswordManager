@@ -2,7 +2,7 @@ export function LoadingGif({ size = 72 }) {
   const outer = { r: 34, stroke: 4, dash: 0.7, duration: "1.6s" };
   const inner = { r: 22, stroke: 3, dash: 0.5, duration: "1.1s" };
 
-  const arc = (ring) => 2 * Math.PI * ring.r;
+  const arc = (ring:any) => 2 * Math.PI * ring.r;
 
   return (
     <>

@@ -1,5 +1,6 @@
 import React, { useState, useRef, type JSX } from "react";
 import "./styles/CredentialsForm.css"
+import { useNavigate, Link } from 'react-router-dom';
 import { LoadingGif } from "./LoadingGif";
 import { Cryptography } from "./Cryptography";
 import { checkPasswordStrength } from "./checkPasswordStrength";
@@ -111,9 +112,9 @@ export function CredentialsForm({formTitle, requestFunction}: {
 
         <button className="send-btn" type="submit" onClick={getUserData}>Submit</button>
 
-        <a className={formTitle.toLowerCase() === "login" ? "signUp-link" : "signUp-link  hidden"} href="/sign_up">
+        <Link className={formTitle.toLowerCase() === "login" ? "signUp-link" : "signUp-link  hidden"} to="/sign_up">
           Create Account
-        </a>
+        </Link>
       </div>
     </div>
   );
