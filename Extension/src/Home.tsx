@@ -83,6 +83,7 @@ export function Home() {
         }
       )
       .catch((err: any) => {
+        navigate("/login");
         console.error(err);
       })
     }
