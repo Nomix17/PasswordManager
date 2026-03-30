@@ -43,7 +43,7 @@ app.post("/login", async (req, res) => {
 
   const loginIsValide = await validateLogin(db, userName, password);
   if (loginIsValide) {
-    const sessionToken = generateSessionKey(password);
+    const sessionToken = generateSessionKey();
     const newUser: userSession = new userSession(userName, sessionToken);
     userSession.logedInUsers.push(newUser);
 
@@ -67,7 +67,7 @@ app.post("/sign_up", async(req, res) => {
 
   const signUpRes = await signUp(db, userName, password);
   if (signUpRes.success) {
-    const sessionToken = generateSessionKey(password);
+    const sessionToken = generateSessionKey();
     const newUser: userSession = new userSession(userName, sessionToken);
     userSession.logedInUsers.push(newUser);
 
@@ -215,9 +215,9 @@ app.listen(port, async() => {
   console.log(`Example app listening at http://localhost:${port}`);
 });
 
-function generateSessionKey(password: string): string {
-  const hash = crypto.createHash("sha256");
-  hash.update(password);
-  return hash.digest("hex");
+function generateSessionKey(): string {
+  const arr = new Uint8Array(32);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
