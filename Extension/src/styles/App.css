@@ -8,8 +8,4 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0 24px;
-  box-sizing: border-box;
-  min-width:350px;
-  min-height:390px;
 }
