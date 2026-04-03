@@ -5,6 +5,7 @@ import { PasswordEntryInputs, PasswordEntry } from "./PasswordEntryInputs";
 import { NewPasswordManagerOverlay } from "./NewPassOverlay";
 import { Cryptography } from "./Cryptography";
 import { Storage } from "./Storage";
+import { Check }  from "lucide-react";
 import "./styles/Home.css"
 
 async function getPasswordsDataReq(userName: string | undefined, sessionToken: string | undefined ) {
@@ -58,7 +59,7 @@ function formatPasswordEntries(data:any) {
   )
 }
 export function Home() {
-  const [notify, setNotify] = useState<{ message: string; success: boolean } | null>(null);
+  const [notify, setNotify] = useState<{ message: string; success: boolean | null } | null>(null);
   const [searchValue, setSearchValue] = useState<string>("");
 
   const passEntryContext = usePasswordsEntries();
@@ -107,12 +108,13 @@ export function Home() {
 
   useEffect(() => {
     if (!notify) return;
-    const timer = setTimeout(() => setNotify(null), 3000);
+    const timer = setTimeout(() => setNotify(null), 1000);
     return () => clearTimeout(timer);
   }, [notify]);
 
   const sendPasswords = async () => {
     try {
+      setNotify({ message: "Loading", success: null });
       if(passEntryContext?.passwordsEntries == null) 
         throw new Error("Passwords entires are undefined");
 
@@ -150,16 +152,19 @@ export function Home() {
 
   return (
     <>
-      { 
-        <NewPasswordManagerOverlay overlayVisibility={newPassOverlayVisibility} setOverlayVisibility={setNewPassOverlayVisibility} />
-      }
-      {notify && (
-        <div className={`notify-div ${notify.success ? "success" : "error"}`}>
-          {notify.message}
-        </div>
-      )}
-
+      {<NewPasswordManagerOverlay 
+        overlayVisibility={newPassOverlayVisibility} 
+        setOverlayVisibility={setNewPassOverlayVisibility} 
+      />}
       <div className="home-container" inert={newPassOverlayVisibility}>
+        {notify && !notify.success && (
+          <div className="notify-wrapper">
+            <div className={`notify-div ${notify.success ? "success" : "error"}`}>
+              {notify.message}
+            </div>
+          </div>
+        )}
+
         <div className="topBar-div">
           <input
             placeholder="Search" 
@@ -178,8 +183,20 @@ export function Home() {
           }
         </div>
         <div className="save-div">
-          <button type="submit" className="send-newpass-btn" onClick={sendPasswords}>
-            Save
+          <button
+            type="submit"
+            className="send-newpass-btn"
+            onClick={sendPasswords}
+          >
+            {notify?.message === "Loading" ? (
+              <div className="loading-gif"></div>
+            ) : notify?.message == null || !notify?.success? (
+              "Send"
+            ) : notify?.success ? (
+              <Check className="check-icon" />
+            ) : (
+                notify?.message
+            )}
           </button>
         </div>
       </div>

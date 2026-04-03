@@ -1,14 +1,12 @@
 .home-container {
   background-color: #101010;
   border:1px solid #333333;
+  position:relative;
   padding: 30px;
-  border-radius: 7px;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 90%;
-  height: 90%;
+  min-height: 400px;
+  min-width: 270px;
+  max-height: 500px;
+  max-width: 337px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -69,14 +67,22 @@
 }
 
 /* ── Notification ── */
-.notify-div {
-  position: fixed;
+.notify-wrapper {
+  position: absolute;
   top: 0;
-  left: 0;
-  width: 101vw;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.notify-div {
   text-align: center;
-  padding: 12px 16px;
-  font-size: 14px;
+  width:100%;
+  padding: 16px 0;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.01em;
   flex-shrink: 0;
@@ -86,14 +92,13 @@
 .notify-div.success {
   background: rgba(255,255,255,0.1);
   border: 1px solid rgba(255,255,255,0.2);
-  border-left: 0;
-  border-right:0;
+  border-width: 1px 0;
   color: rgba(255,255,255,0.8);
 }
 
 .notify-div.error {
-  background: #2a1a1a;
-  border: 1px solid #5a3a3a;
+  background: rgba(42,26,26,0.8);
+  border-bottom: 1px solid #5a3a3a;
   color: #c88888;
 }
 
@@ -138,6 +143,7 @@
 
 /* ── Save Button ── */
 .send-newpass-btn {
+  display: flex;
   width: 100%;
   background: #e8e8e8;
   border: none;
@@ -150,6 +156,8 @@
   letter-spacing: 0.03em;
   transition: background 0.2s, color 0.2s;
   flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
 }
 
 .send-newpass-btn:hover {
@@ -160,3 +168,24 @@
   background: #aaa;
 }
 
+.check-icon {
+  width: 8%;
+  height: 8%;
+  stroke-width:4;
+  flex-shrink: 0;
+}
+
+.loading-gif {
+  width: 10px;
+  height: 10px;
+  border: 5px solid rgba(0, 0, 0, 0.5);
+  border-top-color: rgba(0, 0, 0, 0.9);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
