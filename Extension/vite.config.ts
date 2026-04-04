@@ -8,8 +8,13 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, "index.html")
+        main: path.resolve(__dirname, "index.html"),
+        HandlePasswordForms: path.resolve(__dirname, "src/BackgroundWorkers/HandlePasswordForms.ts"),
+        TriggerPopupListener: path.resolve(__dirname, "src/BackgroundWorkers/TriggerPopupListener.ts")
       },
+      output: {
+        entryFileNames: "[name].js"
+      }
     },
     outDir: "dist"
   }

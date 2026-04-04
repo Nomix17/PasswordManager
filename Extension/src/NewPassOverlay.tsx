@@ -15,6 +15,7 @@ export function NewPasswordManagerOverlay({ overlayVisibility, setOverlayVisibil
   const passUserNameRef = useRef<HTMLInputElement>(null);
   const passPasswordRef = useRef<HTMLInputElement>(null);
 
+  const [isAutoPopup, setAutoPopup] = useState<boolean>(false);
   const [passwordWarningMessage, setPasswordWarningMessage] = useState("");
   const [errors, setErrors] = useState({ type: false, userName: false, password: false });
 
@@ -23,8 +24,40 @@ export function NewPasswordManagerOverlay({ overlayVisibility, setOverlayVisibil
 
   const closeOverlay = () => {
     setOverlayVisibility(false);
+    setAutoPopup(false);
     setPasswordWarningMessage("");
   }
+
+  useEffect(() => {
+    (async () => {
+      const autoPopupRes = await chrome.storage.local.get("auto_popup");
+      await chrome.storage.local.remove("auto_popup");
+
+      const isAutoPopupFlag = autoPopupRes?.auto_popup === "true";
+      if(isAutoPopupFlag) {
+        const newTypeRes = await chrome.storage.local.get("new_type") as {new_type?:string};
+        const newUserNameRes = await chrome.storage.local.get("new_user_name") as {new_user_name?:string};
+        const newPassRes = await chrome.storage.local.get("new_password") as {new_password?:string};
+
+        if(passTypeRef.current && newTypeRes?.new_type) {
+          await chrome.storage.local.remove("new_type");
+          passTypeRef.current.value = newTypeRes?.new_type;
+        }
+
+        if(passUserNameRef.current && newUserNameRes?.new_user_name) {
+          await chrome.storage.local.remove("new_user_name");
+          passUserNameRef.current.value = newUserNameRes?.new_user_name;
+        }
+
+        if(passPasswordRef.current && newPassRes?.new_password) {
+          await chrome.storage.local.remove("new_password");
+          passPasswordRef.current.value = newPassRes?.new_password;
+        }
+      }
+      setAutoPopup(isAutoPopupFlag);
+    })();
+  },[])
+
 
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
@@ -110,7 +143,9 @@ export function NewPasswordManagerOverlay({ overlayVisibility, setOverlayVisibil
 
   return (
     <div 
-      className={overlayVisibility ? "newPassOverlay-div" : "newPassOverlay-div hidden"} 
+      className={
+        overlayVisibility || isAutoPopup
+        ? "newPassOverlay-div" : "newPassOverlay-div hidden"} 
     >
       <div className="newPass-div">
         <button className="close-btn" type="submit" aria-label="Close" onClick={closeOverlay}>
