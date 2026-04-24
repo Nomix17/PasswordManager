@@ -45,6 +45,7 @@ function addEventListeners(passwordFormElements: passwordForm) {
   });
 
   const sendChromeRuntimeMsg = () => {
+    if(userNameInputEl == null) return;
     chrome.runtime.sendMessage({
       type: 'OPEN_POPUP',
       new_type: getWebSiteName(window.location.href),
