@@ -4,7 +4,7 @@ import { CredentialsForm } from "./CredentialsForm";
 export function SignUp(): JSX.Element {
 
   const signUpRequest = async (userName: string, password: string) => {
-    const res = await fetch("http://localhost:8080/sign_up", {
+    const res = await fetch("https://localhost:8080/sign_up", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userName, password }),

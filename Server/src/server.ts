@@ -1,41 +1,41 @@
-import { setupDb, validateLogin, signUp, getPasswordsByUserName, dbErrors, PasswordEntry, updatePasswordsEntries, removePasswordsEntries } from "./dbManager";
-import express, { type Express } from "express";
-import cors from "cors";
+import express, { Request, Response, NextFunction, Express } from 'express';
+import fs from 'fs';
+import https from 'https';
+import http from 'http';
+import cors from 'cors';
+
 import { Database } from "sqlite";
 import crypto, { sign } from 'crypto';
-
-class userSession {
-  static logedInUsers: userSession[] = [];
-  sessionUserName: string;
-  sessionToken: string;
-  constructor(sessionUserName:string, sessionToken: string) {
-    this.sessionUserName = sessionUserName;
-    this.sessionToken = sessionToken;
-  }
-
-  static findUserByUserName(userName:string): userSession | null {
-    for(const user of this.logedInUsers) {
-      if(user.sessionUserName === userName) {
-        return user;
-      }
-    }
-    return null;
-  }
-}
-
-function validateCredentials(sessionUserName: string, sessionToken: string): boolean {
-  for(const user of userSession.logedInUsers) {
-    if(user.sessionUserName === sessionUserName && user.sessionToken === sessionToken) return true;
-  }
-  return false;
-}
+import userSession from "./userSession";
+import {
+  setupDb, validateLogin,
+  signUp, getPasswordsByUserName,
+  updatePasswordsEntries, removePasswordsEntries,
+  dbErrors, PasswordEntry
+} from "./dbManager";
 
 const app: Express = express();
-const port: number = 8080;
-let db: Database;
+const PORT = 8080;
+
+const credentials = {
+  key: fs.readFileSync("localhost+2-key.pem", "utf-8"),
+  cert: fs.readFileSync("localhost+2.pem", "utf-8")
+};
 
 app.use(cors());
 app.use(express.json());
+const httpsServer = https.createServer(credentials, app);
+
+let db: Database;
+
+httpsServer.listen(PORT, async() => {
+  db = await setupDb("database.db");
+  console.log(`Server is live, listening to port ${PORT}`);
+});
+
+app.get("/", async(req, res) => {
+  return res.status(200).send("<h1>Hello World</h1>");
+});
 
 app.post("/login", async (req, res) => {
   const { userName, password } = req.body;
@@ -129,20 +129,12 @@ app.post("/get_passwords", async (req, res) => {
   });
 });
 
-function formatResponse(newPasswords: any) {
-  return newPasswords.map(
-    (row: any) => (
-      new PasswordEntry(row?.id, row?.type, row?.userName, row?.password, row?.iv)
-    )
-  );
-}
-
 app.post("/update_passwords", async (req, res) => {
   const { sessionUserName, sessionToken, newPasswords } = req.body;
   console.log(`Received passwords update request from ${sessionUserName}`);
 
   try {
-    if(validateCredentials(sessionUserName, sessionToken)) {
+    if(userSession.verifyUserSession(sessionUserName, sessionToken)) {
       await updatePasswordsEntries(db, sessionUserName, formatResponse(newPasswords));
 
       const passwordEntries: PasswordEntry[] | null = await getPasswordsByUserName(db, sessionUserName);
@@ -179,7 +171,7 @@ app.post("/remove_password", (req, res) => {
   const { sessionUserName, sessionToken, passwordEntryToRemove } = req.body;
 
   try {
-    if(validateCredentials(sessionUserName, sessionToken)) {
+    if(userSession.verifyUserSession(sessionUserName, sessionToken)) {
       removePasswordsEntries(
         db,
         sessionUserName,
@@ -210,14 +202,22 @@ app.post("/remove_password", (req, res) => {
   }
 });
 
-app.listen(port, async() => {
-  db = await setupDb("database.db");
-  console.log(`Example app listening at http://localhost:${port}`);
-});
-
 function generateSessionKey(): string {
   const arr = new Uint8Array(32);
   crypto.getRandomValues(arr);
-  return Array.from(arr, byte => byte.toString(16).padStart(2, '0')).join('');
+  return Array.from(arr, byte => 
+    byte.toString(16).padStart(2, '0')
+  ).join('');
 }
 
+function formatResponse (newPasswords: any) {
+  return newPasswords.map(
+    (row: any) => (
+      new PasswordEntry(
+        row?.id, row?.type,
+        row?.userName,
+        row?.password, row?.iv
+      )
+    )
+  );
+}

@@ -10,7 +10,7 @@ import "./styles/Home.css"
 
 async function getPasswordsDataReq(userName: string | undefined, sessionToken: string | undefined ) {
   if(userName == null || sessionToken == null) return [];
-  const res = await fetch("http://localhost:8080/get_passwords", {
+  const res = await fetch("https://localhost:8080/get_passwords", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ sessionUserName: userName, sessionToken })
@@ -31,7 +31,7 @@ async function getPasswordsDataReq(userName: string | undefined, sessionToken: s
 
 async function postPasswordsInServer(userName: string | undefined, sessionToken: string | undefined, passwords: any) {
   if(userName == null || sessionToken == null) return [];
-  const res = await fetch("http://localhost:8080/update_passwords", {
+  const res = await fetch("https://localhost:8080/update_passwords", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ sessionUserName: userName, sessionToken, newPasswords: passwords })

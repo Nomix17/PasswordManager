@@ -43,7 +43,7 @@ async function removePasswordEntryReq (
   passwordEntryToRemove: PasswordEntry | undefined
 ) {
   if(userName == null || sessionToken == null) return [];
-  const res = await fetch("http://localhost:8080/remove_password", {
+  const res = await fetch("https://localhost:8080/remove_password", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ sessionUserName: userName, sessionToken , passwordEntryToRemove})
